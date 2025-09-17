@@ -1,1 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BOQ Analysis Tool - Construction Project Management</title>
+    <meta name="description" content="Professional BOQ benchmarking and discrepancy analysis tool for construction projects">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="BOQ Analysis Tool">
+    <meta property="og:description" content="Professional BOQ benchmarking and analysis for construction projects">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://your-username.github.io/boq-analysis-tool/">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="BOQ Analysis Tool">
+    <meta name="twitter:description" content="Professional BOQ benchmarking and analysis">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>BOQ Benchmarking & Analysis Tool</h1>
+            <p>Upload multiple PDF files to analyze Bill of Quantities and identify discrepancies</p>
+            <div class="version-badge">v1.0.0</div>
+        </div>
+        
+        <div class="main-content">
+            <!-- File Upload Section -->
+            <div class="upload-section">
+                <div class="upload-area">
+                    <div class="upload-icon">📋</div>
+                    <h3>Upload BOQ/Quotation PDF Files</h3>
+                    <p>Select multiple PDF files containing Bill of Quantities or Work Orders</p>
+                    <input type="file" id="fileInput" class="file-input" multiple accept=".pdf" />
+                    <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                        Choose Files
+                    </button>
+                    <button class="upload-btn secondary" onclick="clearFiles()">Clear All</button>
+                </div>
+                
+                <div class="files-list" id="filesList"></div>
+            </div>
+            
+            <!-- Analysis Controls -->
+            <div class="analysis-section" id="analysisSection">
+                <div class="controls">
+                    <h3>Analysis Configuration</h3>
+                    
+                    <div class="controls-grid">
+                        <div class="control-group">
+                            <label for="benchmarkFile">Select Benchmark File:</label>
+                            <select id="benchmarkFile">
+                                <option value="">Choose a file as benchmark</option>
+                            </select>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="toleranceLevel">Variance Tolerance (%):</label>
+                            <input type="number" id="toleranceLevel" value="10" min="1" max="50" />
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="analysisType">Analysis Focus:</label>
+                            <select id="analysisType">
+                                <option value="rates">Rate Comparison</option>
+                                <option value="quantities">Quantity Comparison</option>
+                                <option value="descriptions">Description Matching</option>
+                                <option value="comprehensive">Comprehensive Analysis</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <button class="analyze-btn" onclick="performAnalysis()">
+                        <span class="btn-icon">🔍</span>
+                        Start Analysis
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Loading Indicator -->
+            <div class="loading" id="loadingIndicator">
+                <div class="spinner"></div>
+                <p>Processing PDF files and analyzing BOQ data...</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+            
+            <!-- Results Section -->
+            <div class="results-section" id="resultsSection" style="display: none;">
+                <!-- Statistics Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-number" id="totalItems">0</div>
+                        <div class="stat-label">Total Items Analyzed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⚠️</div>
+                        <div class="stat-number" id="discrepanciesFound">0</div>
+                        <div class="stat-label">Discrepancies Found</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-number" id="costVariance">0%</div>
+                        <div class="stat-label">Average Cost Variance</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🎯</div>
+                        <div class="stat-number" id="riskLevel">Low</div>
+                        <div class="stat-label">Risk Assessment</div>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <button class="export-btn" onclick="exportToCSV()">
+                        <span class="btn-icon">📄</span> Export CSV
+                    </button>
+                    <button class="export-btn" onclick="exportToExcel()">
+                        <span class="btn-icon">📊</span> Export Excel
+                    </button>
+                    <button class="export-btn" onclick="generateReport()">
+                        <span class="btn-icon">📋</span> Generate Report
+                    </button>
+                    <button class="export-btn" onclick="shareResults()">
+                        <span class="btn-icon">🔗</span> Share Results
+                    </button>
+                </div>
+                
+                <!-- Discrepancies Table -->
+                <div class="discrepancy-table">
+                    <div class="table-header">
+                        <h3>Detailed Discrepancy Analysis</h3>
+                        <div class="table-controls">
+                            <input type="text" id="searchInput" placeholder="Search items..." onkeyup="filterTable()">
+                            <select id="riskFilter" onchange="filterTable()">
+                                <option value="">All Risk Levels</option>
+                                <option value="High">High Risk</option>
+                                <option value="Medium">Medium Risk</option>
+                                <option value="Low">Low Risk</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-content">
+                        <table id="discrepancyTable">
+                            <thead>
+                                <tr>
+                                    <th onclick="sortTable(0)">Item Description <span class="sort-icon">↕️</span></th>
+                                    <th onclick="sortTable(1)">Benchmark Rate <span class="sort-icon">↕️</span></th>
+                                    <th onclick="sortTable(2)">Compared Rate <span class="sort-icon">↕️</span></th>
+                                    <th onclick="sortTable(3)">Variance % <span class="sort-icon">↕️</span></th>
+                                    <th onclick="sortTable(4)">Risk Level <span class="sort-icon">↕️</span></th>
+                                    <th>Source Files</th>
+                                    <th>Recommendations</th>
+                                </tr>
+                            </thead>
+                            <tbody id="discrepancyTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Recommendations Section -->
+                <div class="recommendations">
+                    <h3>📈 Strategic Recommendations</h3>
+                    <div id="recommendationsList">
+                        <div class="recommendation-item">
+                            <div class="recommendation-icon">💡</div>
+                            <div class="recommendation-content">
+                                <strong>Cost Control:</strong> Focus on high-variance items for immediate cost savings opportunities.
+                            </div>
+                        </div>
+                        <div class="recommendation-item">
+                            <div class="recommendation-icon">📏</div>
+                            <div class="recommendation-content">
+                                <strong>Standardization:</strong> Establish standard rates for frequently occurring items.
+                            </div>
+                        </div>
+                        <div class="recommendation-item">
+                            <div class="recommendation-icon">⚡</div>
+                            <div class="recommendation-content">
+                                <strong>Risk Management:</strong> Monitor medium to high variance items for potential cost overruns.
+                            </div>
+                        </div>
+                        <div class="recommendation-item">
+                            <div class="recommendation-icon">✅</div>
+                            <div class="recommendation-content">
+                                <strong>Quality Assurance:</strong> Verify specifications for items with significant description variations.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p>&copy; 2024 BOQ Analysis Tool. Built for Construction Industry Excellence.</p>
+            <div class="footer-links">
+                <a href="https://github.com/YOUR_USERNAME/boq-analysis-tool" target="_blank">GitHub</a>
+                <a href="docs/user-guide.html">Documentation</a>
+                <a href="mailto:support@boqtool.com">Support</a>
+            </div>
+        </div>
+    </div>
 
+    <script src="js/app.js"></script>
+</body>
+</html>
